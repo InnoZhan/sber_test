@@ -28,14 +28,14 @@ def test_bad_request(client):
     bad_data = "{bad_json: true}"
     response = client.get('/', data=bad_data, content_type='application/json')
     assert response.status_code == 400
-    assert response.text == 'Json format is not valid'
+    assert response.json == {'error': 'Json format is not valid'}
 
 
 def test_server_error(client):
     # Test for not json data passed
     response = client.get('/')
     assert response.status_code == 400
-    assert response.text == 'Application required json to be passed'
+    assert response.json == {'error': 'Application required json to be passed'}
 
 
 def test_other_route(client):
@@ -47,7 +47,7 @@ def test_other_route(client):
         'rate': 6,
     })
     assert response.status_code == 404
-    assert response.text == 'No such endpoint'
+    assert response.json == {'error': 'No such endpoint'}
 
 
 def test_bad_data(client):
@@ -59,13 +59,10 @@ def test_bad_data(client):
         'rate': 6,
     })
     assert response.status_code == 400
-    assert response.text == "'amount' values must be between 10000 and 3000000"
+    assert response.json == {'error': "'amount' values must be between 10000 and 3000000"}
 
 
 def test_internal_server_error(client, monkeypatch):
-    # Test for internal server error
-
-    # Mock calculate_percent to raise unhandled error
     def mock_calculate_percents(data):
         raise Exception("Simulated server error")
 
@@ -79,4 +76,4 @@ def test_internal_server_error(client, monkeypatch):
     }
     response = client.get('/', json=valid_json)
     assert response.status_code == 500
-    assert response.data.decode() == 'Internal server error'
+    assert response.json == {'error': 'Internal server error'}
